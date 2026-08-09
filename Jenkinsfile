@@ -1,11 +1,24 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'NodeJS-22'
+    }
+
     stages {
 
         stage('Install') {
             steps {
-                sh 'npm install'
+                sh '''
+                    echo "===== NODE VERSION ====="
+                    node --version
+
+                    echo "===== NPM VERSION ====="
+                    npm --version
+
+                    echo "===== INSTALLING DEPENDENCIES ====="
+                    npm install
+                '''
             }
         }
 
@@ -17,8 +30,18 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'echo "Building application..."'
+                sh 'echo "Build completed successfully"'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '===== CI PIPELINE SUCCESS ====='
+        }
+
+        failure {
+            echo '===== CI PIPELINE FAILED ====='
         }
     }
 }
