@@ -36,6 +36,12 @@ pipeline {
             }
         }
 
+        stage('Lint') {
+            steps {
+                sh 'node --check app.js'
+            }
+        }
+
         stage('Test') {
             steps {
                 sh 'npm test'
