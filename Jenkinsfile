@@ -5,7 +5,21 @@ pipeline {
         nodejs 'NodeJS-22'
     }
 
+    environment {
+        APP_NAME = 'nodejs-ci'
+    }
+
     stages {
+
+        stage('Environment') {
+            steps {
+                sh '''
+                    echo "Application: $APP_NAME"
+                    echo "Job: $JOB_NAME"
+                    echo "Build: $BUILD_NUMBER"
+                '''
+            }
+        }
 
         stage('Install') {
             steps {
@@ -42,6 +56,10 @@ pipeline {
 
         failure {
             echo '===== CI PIPELINE FAILED ====='
+        }
+
+        always {
+            echo '===== PIPELINE FINISHED ======'
         }
     }
 }
