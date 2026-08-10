@@ -5,6 +5,24 @@ pipeline {
         nodejs 'NodeJS-22'
     }
 
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['development', 'staging', 'production'],
+            description: 'Select deployment environment'
+        )
+    }
+
+    options {
+        timeout(time: 15, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        buildDiscarder(
+            logRotator(
+                numToKeepStr: '10'
+            )
+        )
+    }
+
     environment {
         APP_NAME = 'nodejs-ci'
     }
@@ -36,15 +54,18 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                sh 'node --check app.js'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'npm test'
+        stage('Quality Checks') {
+            parallel {
+                stage('Lint') {
+                    steps {
+                        sh 'node --check app.js'
+                    }
+                }
+                stage('Tests') {
+                    steps {
+                        sh 'npm test'
+                    }
+                }
             }
         }
 
@@ -55,8 +76,25 @@ pipeline {
                     mkdir build
                     cp app.js build/
                     cp package.json build/
-                    echo 'build completed succesfully'
+                    echo 'build completed successfully'
                 '''
+            }
+        }
+
+        stage('Approval') {
+            when {
+                expression {
+                    params.ENVIRONMENT == 'production'
+                }
+            }
+            steps {
+                input message: 'Deploy to production?'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Deploying ${APP_NAME} to ${params.ENVIRONMENT}"
             }
         }
     }
@@ -65,11 +103,9 @@ pipeline {
         success {
             echo '===== CI PIPELINE SUCCESS ====='
         }
-
         failure {
             echo '===== CI PIPELINE FAILED ====='
         }
-
         always {
             echo '===== PIPELINE FINISHED ======'
         }
