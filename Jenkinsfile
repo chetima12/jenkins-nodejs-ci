@@ -24,7 +24,11 @@ pipeline {
         stage('Test') {
             steps {
                 echo '===== RUNNING TESTS ====='
-                sh 'npm test'
+                sh '''
+                   docker run --rm \
+                     ${DOCKER_IMAGE}:${BUILD_NUMBER} \
+                     npm test
+                '''
             }
         }
 
