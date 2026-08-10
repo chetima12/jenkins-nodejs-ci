@@ -5,109 +5,92 @@ pipeline {
         nodejs 'NodeJS-22'
     }
 
-    parameters {
-        choice(
-            name: 'ENVIRONMENT',
-            choices: ['development', 'staging', 'production'],
-            description: 'Select deployment environment'
-        )
-    }
-
-    options {
-        timeout(time: 15, unit: 'MINUTES')
-        disableConcurrentBuilds()
-        buildDiscarder(
-            logRotator(
-                numToKeepStr: '10'
-            )
-        )
-    }
-
     environment {
-        APP_NAME = 'nodejs-ci'
+        IMAGE_NAME = 'chetima/nodejs-ci'
+        IMAGE_TAG  = "${BUILD_NUMBER}"
     }
 
     stages {
 
-        stage('Environment') {
+        stage('Checkout') {
             steps {
-                sh '''
-                    echo "Application: $APP_NAME"
-                    echo "Job: $JOB_NAME"
-                    echo "Build: $BUILD_NUMBER"
-                '''
+                echo '===== CHECKOUT ====='
+                checkout scm
             }
         }
 
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
-                sh '''
-                    echo "===== NODE VERSION ====="
-                    node --version
-
-                    echo "===== NPM VERSION ====="
-                    npm --version
-
-                    echo "===== INSTALLING DEPENDENCIES ====="
-                    npm install
-                '''
+                echo '===== INSTALLING DEPENDENCIES ====='
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm ci'
             }
         }
 
-        stage('Quality Checks') {
-            parallel {
-                stage('Lint') {
-                    steps {
-                        sh 'node --check app.js'
-                    }
+        stage('Test') {
+            steps {
+                echo '===== RUNNING TESTS ====='
+                sh 'npm test'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo '===== BUILDING DOCKER IMAGE ====='
+
+                sh """
+                    docker build \
+                        -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                        -t ${IMAGE_NAME}:latest \
+                        .
+                """
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                echo '===== PUSHING TO DOCKER HUB ====='
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            --username "$DOCKER_USERNAME" \
+                            --password-stdin
+
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${IMAGE_NAME}:latest
+
+                        docker logout
+                    '''
                 }
-                stage('Tests') {
-                    steps {
-                        sh 'npm test'
-                    }
-                }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh '''
-                    rm -rf build
-                    mkdir build
-                    cp app.js build/
-                    cp package.json build/
-                    echo 'build completed successfully'
-                '''
-            }
-        }
-
-        stage('Approval') {
-            when {
-                expression {
-                    params.ENVIRONMENT == 'production'
-                }
-            }
-            steps {
-                input message: 'Deploy to production?'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
             }
         }
     }
 
     post {
         success {
-            echo '===== CI PIPELINE SUCCESS ====='
+            echo '======================================'
+            echo '     CI/CD PIPELINE SUCCESSFUL!       '
+            echo '======================================'
+            echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
         }
+
         failure {
-            echo '===== CI PIPELINE FAILED ====='
+            echo '======================================'
+            echo '       CI/CD PIPELINE FAILED!         '
+            echo '======================================'
         }
+
         always {
-            echo '===== PIPELINE FINISHED ======'
+            echo "Build #${BUILD_NUMBER} finished."
         }
     }
 }
