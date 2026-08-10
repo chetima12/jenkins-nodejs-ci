@@ -12,13 +12,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                echo '===== CHECKOUT ====='
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 echo '===== INSTALLING DEPENDENCIES ====='
