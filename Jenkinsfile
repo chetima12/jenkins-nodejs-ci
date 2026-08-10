@@ -94,7 +94,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Deploying ${APP_NAME} to ${params.ENVIRONMENT}"
+                echo 'Deploying application...'
             }
         }
     }
