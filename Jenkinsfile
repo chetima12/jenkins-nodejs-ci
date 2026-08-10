@@ -24,11 +24,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo '===== RUNNING TESTS ====='
-                sh '''
-                    docker run --rm \
-                        ${IMAGE_NAME}:${IMAGE_TAG} \
-                        npm test
-                '''
+                sh 'npm test'
             }
         }
 
