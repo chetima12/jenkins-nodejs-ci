@@ -25,9 +25,9 @@ pipeline {
             steps {
                 echo '===== RUNNING TESTS ====='
                 sh '''
-                   docker run --rm \
-                     ${DOCKER_IMAGE}:${BUILD_NUMBER} \
-                     npm test
+                    docker run --rm \
+                        ${DOCKER_IMAGE}:${BUILD_NUMBER} \
+                        npm test
                 '''
             }
         }
