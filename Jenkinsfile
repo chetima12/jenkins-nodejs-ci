@@ -26,7 +26,7 @@ pipeline {
                 echo '===== RUNNING TESTS ====='
                 sh '''
                     docker run --rm \
-                        ${DOCKER_IMAGE}:${IMAGE_TAG} \
+                        ${IMAGE_NAME}:${IMAGE_TAG} \
                         npm test
                 '''
             }
