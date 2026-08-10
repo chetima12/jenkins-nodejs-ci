@@ -50,7 +50,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'echo "Build completed successfully"'
+                sh '''
+                    rm -rf build
+                    mkdir build
+                    cp app.js build/
+                    cp package.json build/
+                    echo 'build completed succesfully
+                '''
             }
         }
     }
