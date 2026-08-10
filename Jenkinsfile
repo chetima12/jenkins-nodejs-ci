@@ -41,7 +41,7 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Docker Login') {
             steps {
                 echo '===== PUSHING TO DOCKER HUB ====='
 
@@ -57,13 +57,17 @@ pipeline {
                         echo "$DOCKER_PASSWORD" | docker login \
                             --username "$DOCKER_USERNAME" \
                             --password-stdin
-
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${IMAGE_NAME}:latest
-
-                        docker logout
                     '''
                 }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh '''
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${IMAGE_NAME}:latest
+                '''
             }
         }
     }
