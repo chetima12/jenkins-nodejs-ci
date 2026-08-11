@@ -80,6 +80,7 @@ pipeline {
                 anyOf {
                     branch 'feature/login'
                     branch 'main'
+                    branch 'develop'
                 }
             }
             steps {
