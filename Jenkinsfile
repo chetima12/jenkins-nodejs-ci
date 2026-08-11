@@ -70,6 +70,19 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl set image deployment/nodejs-app \
+                     nodejs-app=${IMAGE_NAME}:${IMAGE_TAG} \
+                     -n jenkins-demo
+
+                    kubectl rollout status deployment/nodejs-app \
+                      -n jenkins-demo
+                '''
+            }
+        }
     }
 
     post {

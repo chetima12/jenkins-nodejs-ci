@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-deployer
+  namespace: jenkins-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-deployer-role
+  namespace: jenkins-demo
+
+rules:
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+
+metadata:
+  name: jenkins-deployer-binding
+  namespace: jenkins-demo
+
+subjects:
+  - kind: ServiceAccount
+    name: jenkins-deployer
+    namespace: jenkins-demo
+
+roleRef:
+  kind: Role
+  name: jenkins-deployer-role
+  apiGroup: rbac.authorization.k8s.io
