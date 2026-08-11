@@ -10,7 +10,19 @@ pipeline {
         IMAGE_TAG  = "${BUILD_NUMBER}"
     }
 
+    options {
+        timeout(time: 20, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        buildDiscarder(
+            logRotator(numToKeepStr: '10')
+        )
+    }
     stages {
+
+        stage('Branch Info') {
+            echo "Branch ${env.BRANCH_NAME}"
+            echo "Build: ${env.BUILD_NUMBER}"
+        }
 
         stage('Install Dependencies') {
             steps {
@@ -63,6 +75,13 @@ pipeline {
         }
 
         stage('Docker Push') {
+
+            when {
+                anyOf {
+                    branch 'feature/login'
+                    branch 'main'
+                }
+            }
             steps {
                 sh '''
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
@@ -71,13 +90,11 @@ pipeline {
             }
         }
 
-        stage('Production Approval') {
-            steps {
-                input message: 'Deploy this image to Kubernetes?'
-            }
-        }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy Development') {
+            when {
+                branch 'develop'
+            }
             steps {
                 sh '''
                     kubectl set image deployment/nodejs-app \
@@ -87,6 +104,25 @@ pipeline {
                     kubectl rollout status deployment/nodejs-app \
                       -n jenkins-demo
                 '''
+            }
+        }
+
+        stage('Production Approval') {
+
+            when {
+                branch 'main'
+            }
+            steps {
+                input message: 'Deploy this image to production ?'
+            }
+        }
+
+        stage('Deploy Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo 'Deploying to production Kubernetes....'
             }
         }
 
