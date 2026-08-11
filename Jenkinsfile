@@ -20,8 +20,11 @@ pipeline {
     stages {
 
         stage('Branch Info') {
-            echo "Branch ${env.BRANCH_NAME}"
-            echo "Build: ${env.BUILD_NUMBER}"
+            steps {
+                echo '===== BRANCH INFO ====='
+                echo "Branch: ${env.BRANCH_NAME}"
+                echo "Build Number: ${env.BUILD_NUMBER}"
+            }
         }
 
         stage('Install Dependencies') {
