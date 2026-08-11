@@ -71,6 +71,12 @@ pipeline {
             }
         }
 
+        stage('Production Approval') {
+            steps {
+                input message: 'Deploy this image to Kubernetes?'
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
