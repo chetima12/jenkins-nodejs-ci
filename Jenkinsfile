@@ -83,6 +83,20 @@ pipeline {
                 '''
             }
         }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    kubectl get deployment \
+                     nodejs-app \
+                     -n jenkins-demo
+
+                    kubectl get pods \
+                     -n jenkins-demo \
+                     -l app=nodejs-app
+                '''
+            }
+        }
     }
 
     post {
