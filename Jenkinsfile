@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         nodejs 'NodeJS-22'
+        sonarQube 'SonarScanner'
     }
 
     environment {
@@ -50,8 +51,8 @@ pipeline {
             steps {
                 sh '''
                     echo "===== SONARSCANNER CHECK ====="
-                     which sonar-scanner
-                     sonar-scanner --version
+                    which sonar-scanner
+                    sonar-scanner --version
                 '''
             }
        }
@@ -59,7 +60,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'SonarScanner'
+                    sh 'sonar-scanner'
                 }
             }
         }
