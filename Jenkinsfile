@@ -22,8 +22,11 @@ pipeline {
         stage('Branch Info') {
             steps {
                 echo '===== BRANCH INFO ====='
+
+
                 echo "Branch: ${env.BRANCH_NAME}"
                 echo "Build Number: ${env.BUILD_NUMBER}"
+
             }
         }
 
