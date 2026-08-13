@@ -46,10 +46,20 @@ pipeline {
             }
         }
 
+        stage('Check SonarScanner') {
+            steps {
+                sh '''
+                    echo "===== SONARSCANNER CHECK ====="
+                     which sonar-scanner
+                     sonar-scanner --version
+                '''
+            }
+       }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                    sh 'SonarScanner'
                 }
             }
         }
