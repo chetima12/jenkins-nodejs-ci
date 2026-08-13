@@ -48,14 +48,17 @@ pipeline {
 
         stage('Check SonarScanner') {
             steps {
-                sh '''
-                    echo "===== SONARSCANNER CHECK ====="
-                    which sonar-scanner
-                    sonar-scanner --version
-                '''
-            }
-       }
+                script {
+                    echo '===== SONARSCANNER CHECK ====='
 
+                    def scannerHome = tool 'SonarScanner'
+
+                    echo "Scanner location: ${scannerHome}"
+
+                    sh "${scannerHome}/bin/sonar-scanner --version"
+                }
+             }
+        }
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
