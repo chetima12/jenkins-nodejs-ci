@@ -121,15 +121,6 @@ pipeline {
             }
         }
 
-        stage('Deploy Production') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo 'Deploying to production Kubernetes....'
-            }
-        }
-
         stage('Verify Deployment') {
             steps {
                 sh '''
