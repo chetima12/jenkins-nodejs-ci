@@ -49,23 +49,32 @@ pipeline {
         stage('Check SonarScanner') {
             steps {
                 script {
-                    echo '===== SONARSCANNER CHECK ====='
-
                     def scannerHome = tool 'SonarScanner'
 
+                    echo "===== SONARSCANNER CHECK ====="
                     echo "Scanner location: ${scannerHome}"
 
-                    sh "${scannerHome}/bin/sonar-scanner --version"
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner --version
+                   """
                 }
-             }
-        }
+            }
+       }
+
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                script {
+                    def scannerHome = tool 'SonarScanner'
+
+                    echo '===== SONARQUBE ANALYSIS ====='
+
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
                 }
             }
         }
+
 
         stage('Quality Gate') {
             steps {
