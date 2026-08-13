@@ -9,4 +9,6 @@ if (add(10, 20) !== 30) {
 }
 
 
-console.log("All tests passed!");
+test('adds two numbers correctly', () => {
+    expect(add(2, 3)).toBe(5);
+});
