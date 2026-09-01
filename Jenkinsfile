@@ -98,13 +98,7 @@ pipeline {
         }
 
         stage('Docker Push') {
-            when {
-                anyOf {
-                    branch 'feature/login'
-                    branch 'main'
-                    branch 'develop'
-                }
-            }
+            
             steps {
                 sh """
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
