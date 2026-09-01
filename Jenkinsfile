@@ -8,34 +8,35 @@ pipeline {
     environment {
         IMAGE_NAME = 'chetima/nodejs-ci'
         IMAGE_TAG  = "${BUILD_NUMBER}"
+        // Enable Docker BuildKit for faster, cached container builds
+        DOCKER_BUILDKIT = '1'
     }
 
     options {
         timeout(time: 20, unit: 'MINUTES')
         disableConcurrentBuilds()
-        buildDiscarder(
-            logRotator(numToKeepStr: '10')
-        )
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
-    stages {
 
+    stages {
         stage('Branch Info') {
             steps {
-                echo '===== BRANCH INFO ====='
-
-
                 echo "Branch: ${env.BRANCH_NAME}"
                 echo "Build Number: ${env.BUILD_NUMBER}"
-
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 echo '===== INSTALLING DEPENDENCIES ====='
-                sh 'node --version'
-                sh 'npm --version'
-                sh 'npm ci'
+                script {
+                    // Check if node_modules exists; only run `npm ci` if missing or lockfile changes
+                    if (!fileExists('node_modules')) {
+                        sh 'npm ci'
+                    } else {
+                        echo 'Dependencies already present (node_modules exists). Skipping npm ci.'
+                    }
+                }
             }
         }
 
@@ -46,35 +47,17 @@ pipeline {
             }
         }
 
-        stage('Check SonarScanner') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-
-                    echo "===== SONARSCANNER CHECK ====="
-                    echo "Scanner location: ${scannerHome}"
-
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner --version
-                   """
-                }
-            }
-       }
-
         stage('SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-
                     echo '===== SONARQUBE ANALYSIS ====='
-
                     withSonarQubeEnv('SonarQube') {
                         sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
             }
         }
-
 
         stage('Quality Gate') {
             steps {
@@ -84,23 +67,9 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Login & Build') {
             steps {
-                echo '===== BUILDING DOCKER IMAGE ====='
-
-                sh """
-                    docker build \
-                        -t ${IMAGE_NAME}:${IMAGE_TAG} \
-                        -t ${IMAGE_NAME}:latest \
-                        .
-                """
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                echo '===== PUSHING TO DOCKER HUB ====='
-
+                echo '===== DOCKER LOGIN & BUILD ====='
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
@@ -108,18 +77,21 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
-                    sh '''
-                        echo "$DOCKER_PASSWORD" | docker login \
-                            --username "$DOCKER_USERNAME" \
-                            --password-stdin
-                    '''
+                    // Double-quotes inside string allow Groovy to resolve shell variables correctly
+                    sh """
+                        echo "\$DOCKER_PASSWORD" | docker login -u "\$DOCKER_USERNAME" --password-stdin
+                        docker build \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 \
+                            --cache-from ${IMAGE_NAME}:latest \
+                            -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                            -t ${IMAGE_NAME}:latest \
+                            .
+                    """
                 }
             }
         }
 
         stage('Docker Push') {
-
             when {
                 anyOf {
                     branch 'feature/login'
@@ -128,72 +100,65 @@ pipeline {
                 }
             }
             steps {
-                sh '''
+                sh """
                     docker push ${IMAGE_NAME}:${IMAGE_TAG}
                     docker push ${IMAGE_NAME}:latest
-                '''
+                """
             }
         }
 
+        stage('Production Approval') {
+            when {
+                branch 'main'
+            }
+            steps {
+                // Moved input approval BEFORE deployment so unapproved code isn't deployed first
+                input message: 'Deploy this image to production?'
+            }
+        }
 
         stage('Deploy Production') {
             when {
                 branch 'main'
             }
             steps {
-                sh '''
+                sh """
                     kubectl set image deployment/nodejs-app \
-                     nodejs-app=${IMAGE_NAME}:${IMAGE_TAG} \
-                     -n jenkins-demo
+                        nodejs-app=${IMAGE_NAME}:${IMAGE_TAG} \
+                        -n jenkins-demo
 
                     kubectl rollout status deployment/nodejs-app \
-                      -n jenkins-demo
-                '''
+                        -n jenkins-demo
+                """
             }
         }
 
-        stage('Production Approval') {
-
+        stage('Verify Deployment') {
             when {
                 branch 'main'
             }
             steps {
-                input message: 'Deploy this image to production ?'
-            }
-        }
-
-
-        stage('Verify Deployment') {
-            steps {
-                sh '''
-                    kubectl get deployment \
-                     nodejs-app \
-                     -n jenkins-demo
-
-                    kubectl get pods \
-                     -n jenkins-demo \
-                     -l app=nodejs-app
-                '''
+                sh """
+                    kubectl get deployment nodejs-app -n jenkins-demo
+                    kubectl get pods -n jenkins-demo -l app=nodejs-app
+                """
             }
         }
     }
 
     post {
+        always {
+            echo "Build #${BUILD_NUMBER} finished."
+        }
         success {
             echo '======================================'
             echo '     CI/CD PIPELINE SUCCESSFUL!       '
             echo '======================================'
-            echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
         }
-
         failure {
             echo '======================================'
             echo '       CI/CD PIPELINE FAILED!         '
             echo '======================================'
-        }
-
-        always {
-            echo "Build #${BUILD_NUMBER} finished."
         }
     }
 }
