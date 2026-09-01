@@ -8,7 +8,6 @@ pipeline {
     environment {
         IMAGE_NAME = 'chetima/nodejs-ci'
         IMAGE_TAG  = "${BUILD_NUMBER}"
-        // Enable Docker BuildKit for faster container builds
         DOCKER_BUILDKIT = '1'
     }
 
@@ -21,7 +20,7 @@ pipeline {
     stages {
         stage('Branch Info') {
             steps {
-                echo "Branch: ${env.BRANCH_NAME}"
+                echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
                 echo "Build Number: ${env.BUILD_NUMBER}"
             }
         }
@@ -52,13 +51,12 @@ pipeline {
                     def scannerHome = tool 'SonarScanner'
                     echo '===== OPTIMIZED SONARQUBE ANALYSIS ====='
 
-                    // Allocate 2GB Heap memory to SonarScanner JVM for faster file indexing
                     withEnv(['SONAR_SCANNER_OPTS=-Xmx2048m -XX:+UseG1GC']) {
                         withSonarQubeEnv('SonarQube') {
                             sh """
                                 ${scannerHome}/bin/sonar-scanner \
                                     -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,package-lock.json" \
-                                    -Dsonar.sources="src"
+                                    -Dsonar.sources=.
                             """
                         }
                     }
@@ -84,8 +82,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    '''
                     sh """
-                        echo "\$DOCKER_PASSWORD" | docker login -u "\$DOCKER_USERNAME" --password-stdin
                         docker build \
                             --build-arg BUILDKIT_INLINE_CACHE=1 \
                             --cache-from ${IMAGE_NAME}:latest \
