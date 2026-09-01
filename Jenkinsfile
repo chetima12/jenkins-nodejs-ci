@@ -107,19 +107,10 @@ pipeline {
             }
         }
 
-        stage('Production Approval') {
-            when {
-                branch 'main'
-            }
-            steps {
-                input message: 'Deploy this image to production?'
-            }
-        }
+       
 
         stage('Deploy Production') {
-            when {
-                branch 'main'
-            }
+            
             steps {
                 sh """
                     kubectl set image deployment/nodejs-app \
@@ -133,9 +124,7 @@ pipeline {
         }
 
         stage('Verify Deployment') {
-            when {
-                branch 'main'
-            }
+            
             steps {
                 sh """
                     kubectl get deployment nodejs-app -n jenkins-demo
