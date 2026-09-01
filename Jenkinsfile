@@ -8,7 +8,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'chetima/nodejs-ci'
         IMAGE_TAG  = "${BUILD_NUMBER}"
-        // Enable Docker BuildKit for faster, cached container builds
+        // Enable Docker BuildKit for faster container builds
         DOCKER_BUILDKIT = '1'
     }
 
@@ -30,7 +30,6 @@ pipeline {
             steps {
                 echo '===== INSTALLING DEPENDENCIES ====='
                 script {
-                    // Check if node_modules exists; only run `npm ci` if missing or lockfile changes
                     if (!fileExists('node_modules')) {
                         sh 'npm ci'
                     } else {
@@ -51,9 +50,17 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    echo '===== SONARQUBE ANALYSIS ====='
-                    withSonarQubeEnv('SonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
+                    echo '===== OPTIMIZED SONARQUBE ANALYSIS ====='
+
+                    // Allocate 2GB Heap memory to SonarScanner JVM for faster file indexing
+                    withEnv(['SONAR_SCANNER_OPTS=-Xmx2048m -XX:+UseG1GC']) {
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/build/**,**/coverage/**,package-lock.json" \
+                                    -Dsonar.sources="src"
+                            """
+                        }
                     }
                 }
             }
@@ -77,7 +84,6 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    // Double-quotes inside string allow Groovy to resolve shell variables correctly
                     sh """
                         echo "\$DOCKER_PASSWORD" | docker login -u "\$DOCKER_USERNAME" --password-stdin
                         docker build \
@@ -112,7 +118,6 @@ pipeline {
                 branch 'main'
             }
             steps {
-                // Moved input approval BEFORE deployment so unapproved code isn't deployed first
                 input message: 'Deploy this image to production?'
             }
         }
