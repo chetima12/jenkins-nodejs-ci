@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: nodejs-app
-          image: chetima/nodejs-ci:23
+          image: 171226592813.dkr.ecr.us-east-1.amazonaws.com/jenkins-nodejs-app:v1.0.0
 
           ports:
             - containerPort: 3000

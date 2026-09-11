@@ -17,7 +17,7 @@ pipeline {
 
     environment {
         AWS_REGION     = 'us-east-1'
-        EKS_CLUSTER    = 'nodejs-eks-cluster'
+        EKS_CLUSTER    = 'prod-eks-cluster'
         ECR_REPOSITORY = 'jenkins-nodejs-app'
         IMAGE_NAME     = 'jenkins-nodejs-app'
         IMAGE_TAG      = "${BUILD_NUMBER}"
