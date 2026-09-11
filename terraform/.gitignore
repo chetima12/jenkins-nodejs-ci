@@ -1,0 +1,53 @@
+# =========================================================================
+# Terraform Core & State Files
+# =========================================================================
+# Local .terraform directories containing downloaded modules and providers
+**/.terraform/
+
+# Terraform state files (crucial if local backends are accidentally created)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash logs
+crash.log
+crash.*.log
+
+# =========================================================================
+# Local Overrides & Variables
+# =========================================================================
+# Exclude all variable files that may contain sensitive credentials/secrets
+*.tfvars
+*.tfvars.json
+
+# Ignore override files containing local customization
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# =========================================================================
+# Execution Plans & Lock Files
+# =========================================================================
+# CLI execution plans (may contain sensitive state values or secrets)
+*.tfplan
+
+# Dependency lock file note:
+# Keep .terraform.lock.hcl IN GIT for production consistency across team environments.
+# Uncomment the line below ONLY if you intentionally do not want to lock provider versions:
+# .terraform.lock.hcl
+
+# =========================================================================
+# Tool-Specific & Environment Files
+# =========================================================================
+# Terragrunt cache
+.terragrunt-cache/
+
+# Environment files
+.env
+.env.*
+
+# Editor / OS files
+.DS_Store
+.idea/
+.vscode/
