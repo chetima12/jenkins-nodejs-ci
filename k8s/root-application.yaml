@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/your-org/gitops-manifests.git'
+    repoURL: 'https://github.com/chetima12/jenkins-nodejs-ci.git'
     targetRevision: HEAD
-    path: apps
+    path: k8s
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: argocd

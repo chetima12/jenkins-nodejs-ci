@@ -117,7 +117,7 @@ pipeline {
 
         stage('Install & Test') {
             steps {
-                dir('jenkins-nodejs-app') {
+                
                     sh '''
                         set -e
 
@@ -134,7 +134,7 @@ pipeline {
 
                         npm test
                     '''
-                }
+                
             }
         }
 
@@ -190,8 +190,8 @@ pipeline {
                     trivy fs \
                         --exit-code 1 \
                         --severity HIGH,CRITICAL \
-                        --skip-dirs "jenkins-nodejs-app/node_modules" \
-                        ./jenkins-nodejs-app
+                        --skip-dirs "node_modules" \
+                        .
 
                     echo ""
                     echo "Trivy filesystem scan PASSED."
@@ -222,7 +222,7 @@ pipeline {
                     docker build \
                         --pull \
                         -t ${IMAGE_NAME}:${IMAGE_TAG} \
-                        ./jenkins-nodejs-app
+                        .
 
                     echo ""
                     echo "Docker image successfully built."
@@ -500,17 +500,17 @@ pipeline {
                     echo ""
                     echo "Current Helm values:"
 
-                    cat helm/nodejs-app/values.yaml
+                    cat helm/jenkins-nodejs-app/values.yaml
 
                     python3 -c '
 from pathlib import Path
 import os
 import re
 
-path = Path("helm/nodejs-app/values.yaml")
+path = Path("helm/jenkins-nodejs-app/values.yaml")
 
 if not path.exists():
-    raise SystemExit("ERROR: helm/nodejs-app/values.yaml does not exist")
+    raise SystemExit("ERROR: helm/jenkins-nodejs-app/values.yaml does not exist")
 
 text = path.read_text()
 tag = os.environ.get("IMAGE_TAG", "")
@@ -523,7 +523,7 @@ text, count = re.subn(
 )
 
 if count != 1:
-    raise SystemExit("ERROR: Could not find image.tag in helm/nodejs-app/values.yaml")
+    raise SystemExit("ERROR: Could not find image.tag in helm/jenkins-nodejs-app/values.yaml")
 
 path.write_text(text)
 '
@@ -531,12 +531,12 @@ path.write_text(text)
                     echo ""
                     echo "Updated Helm values:"
 
-                    cat helm/nodejs-app/values.yaml
+                    cat helm/jenkins-nodejs-app/values.yaml
 
                     echo ""
                     echo "Git diff:"
 
-                    git diff -- helm/nodejs-app/values.yaml
+                    git diff -- helm/jenkins-nodejs-app/values.yaml
                 '''
             }
         }
@@ -567,7 +567,7 @@ path.write_text(text)
                         git config user.name "jenkins"
                         git config user.email "jenkins@localhost"
 
-                        git add helm/nodejs-app/values.yaml
+                        git add helm/jenkins-nodejs-app/values.yaml
 
                         if git diff --cached --quiet; then
                             echo "No GitOps changes detected."
@@ -632,11 +632,11 @@ path.write_text(text)
 
                         echo ""
                         echo "GitOps file:"
-                        echo "helm/nodejs-app/values.yaml"
+                        echo "helm/jenkins-nodejs-app/values.yaml"
 
                         echo ""
                         echo "Image tag:"
-                        grep -A3 '^image:' helm/nodejs-app/values.yaml || true
+                        grep -A3 '^image:' helm/jenkins-nodejs-app/values.yaml || true
 
                         echo ""
                         echo "================================="

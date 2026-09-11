@@ -1,0 +1,34 @@
+replicaCount: 2
+
+image:
+  repository: 171226592813.dkr.ecr.us-east-1.amazonaws.com/jenkins-nodejs-app
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+service:
+  type: ClusterIP
+  port: 3000
+
+containerPort: 3000
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 2
+  periodSeconds: 5
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
