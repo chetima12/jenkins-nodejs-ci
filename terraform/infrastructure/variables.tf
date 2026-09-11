@@ -1,11 +1,23 @@
 variable "aws_region" {
-  default = "us-east-1"
+  description = "AWS Region for infrastructure deployment"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "environment" {
-  default = "prod"
+  description = "Deployment environment name"
+  type        = string
+  default     = "prod"
 }
 
 variable "cluster_name" {
-  default = "prod-eks-cluster"
+  description = "EKS Cluster Name"
+  type        = string
+  default     = "prod-eks-cluster"
+}
+
+variable "app_repository_name" {
+  description = "ECR Repository Name"
+  type        = string
+  default     = "jenkins-nodejs-app"
 }

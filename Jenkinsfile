@@ -18,8 +18,8 @@ pipeline {
     environment {
         AWS_REGION     = 'us-east-1'
         EKS_CLUSTER    = 'nodejs-eks-cluster'
-        ECR_REPOSITORY = 'nodejs-eks-app'
-        IMAGE_NAME     = 'nodejs-eks-app'
+        ECR_REPOSITORY = 'jenkins-nodejs-app'
+        IMAGE_NAME     = 'jenkins-nodejs-app'
         IMAGE_TAG      = "${BUILD_NUMBER}"
     }
 
@@ -117,7 +117,7 @@ pipeline {
 
         stage('Install & Test') {
             steps {
-                dir('nodejs-eks-app') {
+                dir('jenkins-nodejs-app') {
                     sh '''
                         set -e
 
@@ -190,8 +190,8 @@ pipeline {
                     trivy fs \
                         --exit-code 1 \
                         --severity HIGH,CRITICAL \
-                        --skip-dirs "nodejs-eks-app/node_modules" \
-                        ./nodejs-eks-app
+                        --skip-dirs "jenkins-nodejs-app/node_modules" \
+                        ./jenkins-nodejs-app
 
                     echo ""
                     echo "Trivy filesystem scan PASSED."
@@ -222,7 +222,7 @@ pipeline {
                     docker build \
                         --pull \
                         -t ${IMAGE_NAME}:${IMAGE_TAG} \
-                        ./nodejs-eks-app
+                        ./jenkins-nodejs-app
 
                     echo ""
                     echo "Docker image successfully built."
@@ -574,7 +574,7 @@ path.write_text(text)
                             exit 0
                         fi
 
-                        git commit -m "chore: deploy nodejs-eks-app ${IMAGE_TAG}"
+                        git commit -m "chore: deploy jenkins-nodejs-app ${IMAGE_TAG}"
 
                         echo ""
                         echo "Git commit created:"
@@ -624,7 +624,7 @@ path.write_text(text)
 
                         echo ""
                         echo "Application:"
-                        echo "nodejs-eks-app"
+                        echo "jenkins-nodejs-app"
 
                         echo ""
                         echo "Image:"

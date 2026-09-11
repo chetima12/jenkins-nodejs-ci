@@ -1,8 +1,67 @@
-node_modules
-npm-debug.log
-.git
-.gitignore
+# =========================================================================
+# Node.js Dependencies & Build Artifacts
+# =========================================================================
+# Exclude local node_modules so 'npm install' runs cleanly inside the container
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs & coverage reports
+dist/
+build/
+coverage/
+.next/
+.nuxt/
+
+# =========================================================================
+# Terraform Core, State, & Cache
+# =========================================================================
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*.tfplan
+crash.log
+crash.*.log
+.terragrunt-cache/
+
+# =========================================================================
+# Secrets, Environment Files & Keys
+# =========================================================================
 .env
+.env.*
+*.pem
+*.key
+*.crt
+*.pub
+
+# =========================================================================
+# Version Control & CI/CD Configs
+# =========================================================================
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab/
 Jenkinsfile
+
+# =========================================================================
+# IDEs, System Files & Temporary Files
+# =========================================================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+
+# Docker files
 Dockerfile
-coverage
+.dockerignore
+docker-compose*.yml
