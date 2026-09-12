@@ -500,30 +500,30 @@ pipeline {
                     echo ""
                     echo "Current Helm values:"
 
-                    cat helm/nodejs-app/values.yaml
+                    cat helm/jenkins-nodejs-app/values.yaml
 
                     python3 -c '
 from pathlib import Path
 import os
 import re
 
-path = Path("helm/nodejs-app/values.yaml")
+path = Path("helm/jenkins-nodejs-app/values.yaml")
 
 if not path.exists():
-    raise SystemExit("ERROR: helm/nodejs-app/values.yaml does not exist")
+    raise SystemExit("ERROR: helm/jenkins-nodejs-app/values.yaml does not exist")
 
 text = path.read_text()
 tag = os.environ.get("IMAGE_TAG", "")
 
 text, count = re.subn(
-    r"(?m)^( *tag: *)[^\"]*(\".*)$",
-    lambda match: match.group(1) + tag + match.group(2),
+    r"(?m)^( *tag: *).*$",
+    lambda match: match.group(1) + '"' + tag + '"',
     text,
     count=1
 )
 
 if count != 1:
-    raise SystemExit("ERROR: Could not find image.tag in helm/nodejs-app/values.yaml")
+    raise SystemExit("ERROR: Could not find image.tag in helm/jenkins-nodejs-app/values.yaml")
 
 path.write_text(text)
 '
@@ -531,12 +531,12 @@ path.write_text(text)
                     echo ""
                     echo "Updated Helm values:"
 
-                    cat helm/nodejs-app/values.yaml
+                    cat helm/jenkins-nodejs-app/values.yaml
 
                     echo ""
                     echo "Git diff:"
 
-                    git diff -- helm/nodejs-app/values.yaml
+                    git diff -- helm/jenkins-nodejs-app/values.yaml
                 '''
             }
         }
