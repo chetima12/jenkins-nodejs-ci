@@ -35,7 +35,9 @@ describe("HTTP server", () => {
         server.listen(0, done);
     });
 
-    afterAll(done => server.close(done));
+    afterAll(done => {
+        server.close(done);
+    });
 
     test("serves the application response", async () => {
         const response = await request(server, "/");
