@@ -564,7 +564,7 @@ path.write_text(text)
                         echo "Commit GitOps Change"
                         echo "================================="
 
-                        GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/devops-eks-project.git"
+                        GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/jenkins-nodejs-ci.git"
                         VALUES_FILE="helm/nodejs-app/values.yaml"
                         IMAGE_REPOSITORY=$(awk '/repository:/ { sub(/.*repository:[[:space:]]*/, ""); print; exit }' helm/jenkins-nodejs-app/values.yaml)
 
