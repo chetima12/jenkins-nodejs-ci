@@ -8,6 +8,21 @@ image:
 service:
   type: ClusterIP
   port: 3000
+  metricsPort: 3001
+
+observability:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    additionalLabels:
+      release: monitoring
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "3000"
+    promtail.io/scrape: "true"
 
 containerPort: 3000
 

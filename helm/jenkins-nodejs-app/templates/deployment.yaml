@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Release.Name }}
         {{- include "jenkins-nodejs-app.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- toYaml .Values.observability.podAnnotations | nindent 8 }}
     spec:
       containers:
         - name: {{ .Chart.Name | trunc 63 | trimSuffix "-" }}
