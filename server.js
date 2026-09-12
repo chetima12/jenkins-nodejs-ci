@@ -28,44 +28,49 @@ function log(level, message, fields = {}) {
   }));
 }
 
-const server = http.createServer(async (req, res) => {
-  const startedAt = process.hrtime.bigint();
-  const requestUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-  let statusCode = 200;
-  let route = requestUrl.pathname;
+function createServer() {
+  return http.createServer(async (req, res) => {
+    const startedAt = process.hrtime.bigint();
+    const requestUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    let statusCode = 200;
+    let route = requestUrl.pathname;
 
-  if (route === "/metrics") {
-    res.writeHead(200, { "Content-Type": client.register.contentType });
-    res.end(await client.register.metrics());
-    return;
-  }
+    if (route === "/metrics") {
+      res.writeHead(200, { "Content-Type": client.register.contentType });
+      res.end(await client.register.metrics());
+      return;
+    }
 
-  if (route === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok" }));
-  } else if (route === "/") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Hello from Jenkins CI/CD!\n");
-  } else {
-    statusCode = 404;
-    route = "unmatched";
-    res.writeHead(statusCode, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Not found" }));
-  }
+    if (route === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "ok" }));
+    } else if (route === "/") {
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("Hello from Jenkins CI/CD!\n");
+    } else {
+      statusCode = 404;
+      route = "unmatched";
+      res.writeHead(statusCode, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not found" }));
+    }
 
-  const durationSeconds = Number(process.hrtime.bigint() - startedAt) / 1e9;
-  metrics.requests.inc({ method: req.method, route, status_code: statusCode });
-  metrics.duration.observe({ method: req.method, route, status_code: statusCode }, durationSeconds);
-  if (route !== "/metrics") {
+    const durationSeconds = Number(process.hrtime.bigint() - startedAt) / 1e9;
+    metrics.requests.inc({ method: req.method, route, status_code: statusCode });
+    metrics.duration.observe({ method: req.method, route, status_code: statusCode }, durationSeconds);
     log("info", "http_request", {
       method: req.method,
       route,
       status_code: statusCode,
       duration_ms: Number((durationSeconds * 1000).toFixed(3)),
     });
-  }
-});
+  });
+}
 
-server.listen(PORT, () => {
-  log("info", "server_started", { port: PORT });
-});
+if (require.main === module) {
+  const server = createServer();
+  server.listen(PORT, () => {
+    log("info", "server_started", { port: PORT });
+  });
+}
+
+module.exports = { createServer };
