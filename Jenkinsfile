@@ -564,10 +564,23 @@ path.write_text(text)
                         echo "Commit GitOps Change"
                         echo "================================="
 
+                        GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/devops-eks-project.git"
+                        VALUES_FILE="helm/jenkins-nodejs-app/values.yaml"
+                        VALUES_BACKUP=$(mktemp)
+
+                        cp "${VALUES_FILE}" "${VALUES_BACKUP}"
+
+                        git fetch "${GITOPS_URL}" main
+
+                        echo "Checking out the latest GitOps main branch..."
+                        git checkout --detach -f FETCH_HEAD
+
+                        mkdir -p "$(dirname "${VALUES_FILE}")"
+                        cp "${VALUES_BACKUP}" "${VALUES_FILE}"
+
                         git config user.name "jenkins"
                         git config user.email "jenkins@localhost"
-
-                        git add helm/jenkins-nodejs-app/values.yaml
+                        git add "${VALUES_FILE}"
 
                         if git diff --cached --quiet; then
                             echo "No GitOps changes detected."
@@ -584,7 +597,7 @@ path.write_text(text)
                         echo "Pushing GitOps change to GitHub..."
 
                         git push \
-                            "https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/devops-eks-project.git" \
+                            "${GITOPS_URL}" \
                             HEAD:main
 
                         echo ""
