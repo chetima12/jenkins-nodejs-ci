@@ -6,6 +6,8 @@ COPY package*.json ./
 
 RUN npm ci
 
+RUN npm prune --omit=dev
+
 COPY app.js server.js ./
 
 FROM node:20-alpine
