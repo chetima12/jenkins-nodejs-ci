@@ -516,8 +516,8 @@ text = path.read_text()
 tag = os.environ.get("IMAGE_TAG", "")
 
 text, count = re.subn(
-    r"(?m)^(\\s*tag:\\s*\\\")[^\\\"]*(\\\".*)$",
-    r"\\g<1>" + tag + r"\\g<2>",
+    r"(?m)^( *tag: *)[^\"]*(\".*)$",
+    lambda match: match.group(1) + tag + match.group(2),
     text,
     count=1
 )
@@ -566,7 +566,7 @@ path.write_text(text)
 
                         GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/devops-eks-project.git"
                         VALUES_FILE="helm/nodejs-app/values.yaml"
-                        IMAGE_REPOSITORY=$(sed -n 's/^\s*repository:\s*//p' helm/jenkins-nodejs-app/values.yaml | head -n 1)
+                        IMAGE_REPOSITORY=$(awk '/repository:/ { sub(/.*repository:[[:space:]]*/, ""); print; exit }' helm/jenkins-nodejs-app/values.yaml)
 
                         if [ -z "${IMAGE_REPOSITORY}" ]; then
                             echo "ERROR: Could not determine the ECR image repository"
@@ -595,14 +595,14 @@ repository = os.environ["IMAGE_REPOSITORY"]
 tag = os.environ["IMAGE_TAG"]
 
 text, repository_count = re.subn(
-    r"(?m)^(\s*repository:\s*).*$",
-    r"\g<1>" + repository,
+    r"(?m)^( *repository: *).*$",
+    lambda match: match.group(1) + repository,
     text,
     count=1,
 )
 text, tag_count = re.subn(
-    r"(?m)^(\s*tag:\s*).*$",
-    r'\g<1>"' + tag + r'"',
+    r"(?m)^( *tag: *).*$",
+    lambda match: match.group(1) + '"' + tag + '"',
     text,
     count=1,
 )
