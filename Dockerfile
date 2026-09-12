@@ -17,6 +17,7 @@ RUN apk upgrade --no-cache \
 WORKDIR /app
 
 COPY --from=build /app/app.js /app/server.js ./
+COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 3000
 
