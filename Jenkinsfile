@@ -500,17 +500,17 @@ pipeline {
                     echo ""
                     echo "Current Helm values:"
 
-                    cat helm/jenkins-nodejs-app/values.yaml
+                    cat helm/nodejs-app/values.yaml
 
                     python3 -c '
 from pathlib import Path
 import os
 import re
 
-path = Path("helm/jenkins-nodejs-app/values.yaml")
+path = Path("helm/nodejs-app/values.yaml")
 
 if not path.exists():
-    raise SystemExit("ERROR: helm/jenkins-nodejs-app/values.yaml does not exist")
+    raise SystemExit("ERROR: helm/nodejs-app/values.yaml does not exist")
 
 text = path.read_text()
 tag = os.environ.get("IMAGE_TAG", "")
@@ -523,7 +523,7 @@ text, count = re.subn(
 )
 
 if count != 1:
-    raise SystemExit("ERROR: Could not find image.tag in helm/jenkins-nodejs-app/values.yaml")
+    raise SystemExit("ERROR: Could not find image.tag in helm/nodejs-app/values.yaml")
 
 path.write_text(text)
 '
@@ -531,12 +531,12 @@ path.write_text(text)
                     echo ""
                     echo "Updated Helm values:"
 
-                    cat helm/jenkins-nodejs-app/values.yaml
+                    cat helm/nodejs-app/values.yaml
 
                     echo ""
                     echo "Git diff:"
 
-                    git diff -- helm/jenkins-nodejs-app/values.yaml
+                    git diff -- helm/nodejs-app/values.yaml
                 '''
             }
         }
@@ -565,18 +565,53 @@ path.write_text(text)
                         echo "================================="
 
                         GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/devops-eks-project.git"
-                        VALUES_FILE="helm/jenkins-nodejs-app/values.yaml"
-                        VALUES_BACKUP=$(mktemp)
+                        VALUES_FILE="helm/nodejs-app/values.yaml"
+                        IMAGE_REPOSITORY=$(sed -n 's/^\s*repository:\s*//p' helm/jenkins-nodejs-app/values.yaml | head -n 1)
 
-                        cp "${VALUES_FILE}" "${VALUES_BACKUP}"
+                        if [ -z "${IMAGE_REPOSITORY}" ]; then
+                            echo "ERROR: Could not determine the ECR image repository"
+                            exit 1
+                        fi
 
                         git fetch "${GITOPS_URL}" main
 
                         echo "Checking out the latest GitOps main branch..."
                         git checkout --detach -f FETCH_HEAD
 
-                        mkdir -p "$(dirname "${VALUES_FILE}")"
-                        cp "${VALUES_BACKUP}" "${VALUES_FILE}"
+                        if [ ! -f "${VALUES_FILE}" ]; then
+                            echo "ERROR: ${VALUES_FILE} does not exist in the GitOps repository"
+                            exit 1
+                        fi
+
+                        export IMAGE_REPOSITORY IMAGE_TAG VALUES_FILE
+                        python3 -c '
+from pathlib import Path
+import os
+import re
+
+path = Path(os.environ["VALUES_FILE"])
+text = path.read_text()
+repository = os.environ["IMAGE_REPOSITORY"]
+tag = os.environ["IMAGE_TAG"]
+
+text, repository_count = re.subn(
+    r"(?m)^(\s*repository:\s*).*$",
+    r"\g<1>" + repository,
+    text,
+    count=1,
+)
+text, tag_count = re.subn(
+    r"(?m)^(\s*tag:\s*).*$",
+    r'\g<1>"' + tag + r'"',
+    text,
+    count=1,
+)
+
+if repository_count != 1 or tag_count != 1:
+    raise SystemExit("ERROR: Could not update image.repository and image.tag")
+
+path.write_text(text)
+'
 
                         git config user.name "jenkins"
                         git config user.email "jenkins@localhost"
@@ -645,11 +680,11 @@ path.write_text(text)
 
                         echo ""
                         echo "GitOps file:"
-                        echo "helm/jenkins-nodejs-app/values.yaml"
+                        echo "helm/nodejs-app/values.yaml"
 
                         echo ""
                         echo "Image tag:"
-                        grep -A3 '^image:' helm/jenkins-nodejs-app/values.yaml || true
+                        grep -A3 '^image:' helm/nodejs-app/values.yaml || true
 
                         echo ""
                         echo "================================="

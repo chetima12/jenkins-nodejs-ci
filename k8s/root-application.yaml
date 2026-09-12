@@ -8,12 +8,14 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/chetima12/jenkins-nodejs-ci.git'
-    targetRevision: HEAD
-    path: k8s
+    repoURL: 'https://github.com/chetima12/devops-eks-project.git'
+    targetRevision: main
+    path: helm/nodejs-app
+    helm:
+      releaseName: nodejs-app
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: argocd
+    namespace: nodejs-app
   syncPolicy:
     automated:
       prune: true
