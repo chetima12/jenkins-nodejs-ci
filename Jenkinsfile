@@ -502,7 +502,7 @@ pipeline {
 
                     cat helm/jenkins-nodejs-app/values.yaml
 
-                    python3 -c '
+                    python3 <<'PY'
 from pathlib import Path
 import os
 import re
@@ -526,7 +526,7 @@ if count != 1:
     raise SystemExit("ERROR: Could not find image.tag in helm/jenkins-nodejs-app/values.yaml")
 
 path.write_text(text)
-'
+PY
 
                     echo ""
                     echo "Updated Helm values:"
@@ -565,7 +565,7 @@ path.write_text(text)
                         echo "================================="
 
                         GITOPS_URL="https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/chetima12/jenkins-nodejs-ci.git"
-                        VALUES_FILE="helm/nodejs-app/values.yaml"
+                        VALUES_FILE="helm/jenkins-nodejs-app/values.yaml"
                         IMAGE_REPOSITORY=$(awk '/repository:/ { sub(/.*repository:[[:space:]]*/, ""); print; exit }' helm/jenkins-nodejs-app/values.yaml)
 
                         if [ -z "${IMAGE_REPOSITORY}" ]; then
@@ -584,7 +584,7 @@ path.write_text(text)
                         fi
 
                         export IMAGE_REPOSITORY IMAGE_TAG VALUES_FILE
-                        python3 -c '
+                        python3 <<'PY'
 from pathlib import Path
 import os
 import re
@@ -611,7 +611,7 @@ if repository_count != 1 or tag_count != 1:
     raise SystemExit("ERROR: Could not update image.repository and image.tag")
 
 path.write_text(text)
-'
+PY
 
                         git config user.name "jenkins"
                         git config user.email "jenkins@localhost"
@@ -680,11 +680,11 @@ path.write_text(text)
 
                         echo ""
                         echo "GitOps file:"
-                        echo "helm/nodejs-app/values.yaml"
+                        echo "helm/jenkins-nodejs-app/values.yaml"
 
                         echo ""
                         echo "Image tag:"
-                        grep -A3 '^image:' helm/nodejs-app/values.yaml || true
+                        grep -A3 '^image:' helm/jenkins-nodejs-app/values.yaml || true
 
                         echo ""
                         echo "================================="

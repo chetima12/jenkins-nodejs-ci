@@ -8,11 +8,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/chetima12/devops-eks-project.git'
+    repoURL: 'https://github.com/chetima12/jenkins-nodejs-ci.git'
     targetRevision: main
-    path: helm/nodejs-app
+    path: helm/jenkins-nodejs-app
     helm:
-      releaseName: nodejs-app
+      releaseName: jenkins-nodejs-app
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: nodejs-app
