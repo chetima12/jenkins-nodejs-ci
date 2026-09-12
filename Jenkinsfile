@@ -171,6 +171,14 @@ pipeline {
             }
         }
 
+        stage('SonarQube Quality Gate') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
 
         /*
          * ==========================================
@@ -622,7 +630,7 @@ PY
                             exit 0
                         fi
 
-                        git commit -m "chore: deploy jenkins-nodejs-app ${IMAGE_TAG}"
+                        git commit -m "chore: deploy jenkins-nodejs-app ${IMAGE_TAG} [skip ci]"
 
                         echo ""
                         echo "Git commit created:"
